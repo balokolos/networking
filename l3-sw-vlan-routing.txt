@@ -1,0 +1,111 @@
+Switch> enable
+Switch# configure terminal
+
+
+Switch(config)# interface vlan 1
+Switch(config-if)# ip address 192.168.1.1 255.255.255.0
+Switch(config-if)# no shutdown
+
+
+Switch# show ip interface brief
+
+Switch(config)# interface FastEthernet0/1
+Switch(config-if)# switchport mode access
+Switch(config-if)# switchport access vlan 1
+Switch(config-if)# no shutdown
+
+Switch(config)# line vty 0 4
+Switch(config-line)# password cisco
+Switch(config-line)# login
+Switch(config-line)# exit
+
+#If your switch is in a network with a router, set the default gateway:
+Switch(config)# ip default-gateway 192.168.1.254
+
+
+
+###VLAN
+Switch> enable
+Switch# configure terminal
+
+Switch(config)# vlan 10
+Switch(config-vlan)# name Sales   # (Optional) Name the VLAN
+Switch(config-vlan)# exit
+
+Switch(config)# interface FastEthernet0/1
+Switch(config-if)# switchport mode access
+Switch(config-if)# switchport access vlan 10
+Switch(config-if)# no shutdown
+Switch(config-if)# exit
+
+Switch# show vlan brief
+
+Switch# write memory
+
+
+
+### L3 VLAN Routing
+Switch(config)# ip routing
+
+Switch(config)# interface vlan 20
+Switch(config-if)# ip address 192.168.20.1 255.255.255.0
+Switch(config-if)# no shutdown
+Switch(config-if)# exit
+
+Switch(config)# interface vlan 30
+Switch(config-if)# ip address 192.168.30.1 255.255.255.0
+Switch(config-if)# no shutdown
+Switch(config-if)# exit
+
+##Connect devices in VLAN 20 and VLAN 30, set their gateways as:
+#VLAN 20 devices: 192.168.20.1
+#VLAN 30 devices: 192.168.30.1
+
+
+### L3 IP Routing Between SW
+Switch(config)# ip routing
+
+#SW1
+Switch1(config)# interface GigabitEthernet0/1
+Switch1(config-if)# no switchport
+Switch1(config-if)# ip address 192.168.100.1 255.255.255.248
+Switch1(config-if)# no shutdown
+
+#SW2
+Switch2(config)# interface GigabitEthernet0/1
+Switch2(config-if)# no switchport
+Switch2(config-if)# ip address 192.168.100.2 255.255.255.248
+Switch2(config-if)# no shutdown
+
+##configure static routes.
+#SW!
+Switch1(config)# ip route 192.168.30.0 255.255.255.0 192.168.100.2
+Switch1(config)# ip route 192.168.40.0 255.255.255.0 192.168.100.2
+
+#SW2
+Switch2(config)# ip route 192.168.10.0 255.255.255.0 192.168.100.1
+Switch2(config)# ip route 192.168.20.0 255.255.255.0 192.168.100.1
+
+#verify
+show ip route static
+
+
+### OSPF 
+Switch1(config)# router ospf 1
+Switch1(config-router)# network 10.1.1.0 0.0.0.3 area 0
+Switch1(config-router)# network 192.168.10.0 0.0.0.255 area 0
+Switch1(config-router)# exit
+Switch1(config)# end
+Switch1# wr   # Save config
+# repeat on sw2
+
+#verify
+Switch# show ip protocols
+Switch# show ip ospf interface brief
+Switch# show ip ospf neighbor
+
+#remove entry
+router ospf 1
+no network 192.168.10.0 0.0.0.255 area 0
+
+
